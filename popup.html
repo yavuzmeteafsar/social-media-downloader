@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Social Media Downloader</title>
+<style>
+  :root {
+    --bg: #0e0f12;
+    --panel: #17191e;
+    --line: #262932;
+    --text: #f2f3f5;
+    --muted: #8b8f99;
+    --ig: linear-gradient(135deg, #f58529 0%, #dd2a7b 50%, #8134af 100%);
+    --tt: linear-gradient(135deg, #25f4ee 0%, #2b2f38 50%, #fe2c55 100%);
+    --accent: #dd2a7b;
+  }
+  body[data-p="tiktok"] { --accent: #fe2c55; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    width: 360px;
+    background: var(--bg);
+    color: var(--text);
+    font: 13px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px 10px;
+  }
+  .logo {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: var(--ig);
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 14px;
+  }
+  body[data-p="tiktok"] .logo { background: var(--tt); }
+  h1 { margin: 0; font-size: 14px; font-weight: 650; letter-spacing: -0.01em; }
+  .seg {
+    margin: 0 16px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 3px;
+    position: relative;
+  }
+  .seg button {
+    position: relative; z-index: 1;
+    border: 0; background: transparent; color: var(--muted);
+    font: inherit; font-weight: 600;
+    padding: 7px 0; border-radius: 7px; cursor: pointer;
+    transition: color .2s;
+  }
+  .seg button[aria-pressed="true"] { color: #fff; }
+  .seg .pill {
+    position: absolute; top: 3px; bottom: 3px; left: 3px;
+    width: calc(50% - 3px);
+    border-radius: 7px;
+    background: var(--ig);
+    transition: transform .25s cubic-bezier(.3,.7,.2,1), background .25s;
+  }
+  body[data-p="tiktok"] .seg .pill { transform: translateX(100%); background: var(--tt); }
+  .sub {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px 8px; color: var(--muted); font-size: 12px;
+  }
+  .sub button {
+    border: 0; background: none; color: var(--muted); font: inherit; cursor: pointer; padding: 2px 4px; border-radius: 6px;
+  }
+  .sub button:hover { color: var(--text); background: var(--panel); }
+  .grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    padding: 0 16px 16px;
+    min-height: 60px;
+  }
+  .card {
+    position: relative;
+    border: 0; padding: 0; margin: 0;
+    background: var(--panel);
+    border-radius: 10px; overflow: hidden;
+    aspect-ratio: 9 / 16;
+    cursor: pointer; color: inherit; font: inherit; text-align: left;
+    outline: 1px solid var(--line);
+    transition: transform .15s, outline-color .15s;
+  }
+  .card:hover { transform: translateY(-2px); outline-color: var(--accent); }
+  .card:active { transform: scale(.98); }
+  .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card .ph { width: 100%; height: 100%; display: grid; place-items: center; color: var(--muted); font-size: 22px; }
+  .card .shade {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,.45) 0%, transparent 30%, transparent 60%, rgba(0,0,0,.8) 100%);
+  }
+  .badge {
+    position: absolute; top: 6px; left: 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: .02em;
+    padding: 2px 6px; border-radius: 6px;
+    background: rgba(0,0,0,.55); backdrop-filter: blur(6px);
+  }
+  .count {
+    position: absolute; top: 6px; right: 6px;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 6px; border-radius: 6px;
+    background: rgba(0,0,0,.55);
+  }
+  .user {
+    position: absolute; left: 7px; right: 7px; bottom: 6px;
+    font-size: 11px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .state {
+    position: absolute; inset: 0;
+    display: none; place-items: center;
+    background: rgba(0,0,0,.6); font-size: 22px;
+  }
+  .card[data-s] .state { display: grid; }
+  .card[data-s="busy"] .state::after { content: ""; width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; animation: spin .8s linear infinite; }
+  .card[data-s="ok"] .state::after { content: "✓"; color: #4ade80; }
+  .card[data-s="err"] .state::after { content: "!"; color: #f87171; font-weight: 800; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .msg {
+    grid-column: 1 / -1;
+    padding: 18px 12px; text-align: center; color: var(--muted);
+    background: var(--panel); border: 1px dashed var(--line); border-radius: 10px;
+  }
+  .msg b { color: var(--text); display: block; margin-bottom: 4px; font-size: 13px; }
+  .msg button {
+    margin-top: 10px; border: 0; border-radius: 8px; padding: 7px 12px;
+    background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .lang {
+    margin-left: auto;
+    display: flex; gap: 2px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 2px;
+  }
+  .lang button {
+    border: 0; background: none; color: var(--muted);
+    font: inherit; font-size: 11px; font-weight: 700; letter-spacing: .03em;
+    padding: 3px 7px; border-radius: 6px; cursor: pointer;
+  }
+  .lang button[aria-pressed="true"] { background: #2a2d36; color: var(--text); }
+  .foot { padding: 0 16px 12px; color: var(--muted); font-size: 11px; min-height: 16px; }
+  .skel { aspect-ratio: 9/16; border-radius: 10px; background: linear-gradient(90deg, var(--panel), #1f2229, var(--panel)); background-size: 200% 100%; animation: sh 1.2s infinite; }
+  @keyframes sh { to { background-position: -200% 0; } }
+</style>
+</head>
+<body data-p="instagram">
+  <header>
+    <div class="logo">⬇</div>
+    <h1>Social Media Downloader</h1>
+    <div class="lang" role="group" aria-label="Language">
+      <button data-l="tr" aria-pressed="false">TR</button>
+      <button data-l="en" aria-pressed="true">EN</button>
+    </div>
+  </header>
+  <div class="seg" role="group" aria-label="Platform">
+    <span class="pill"></span>
+    <button data-p="instagram" aria-pressed="true">Instagram</button>
+    <button data-p="tiktok" aria-pressed="false">TikTok</button>
+  </div>
+  <div class="sub">
+    <span id="hint"></span>
+    <button id="refresh"></button>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="foot" id="foot"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
