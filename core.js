@@ -106,11 +106,49 @@
       caption: (d.caption || '').slice(0, 80),
       count: d.files.length,
       video: d.files.some(f => f.ext === 'mp4'),
+      locked: !!d.protected,
       thumb: await thumb(d.thumb)
     })));
   }
 
-  async function save(url, name) {
+  const PROTECTION_BOXES = new Set(['encv', 'enca', 'pssh', 'tenc', 'sinf', 'schm', 'senc']);
+  const CONTAINER_BOXES = new Set(['moov', 'trak', 'mdia', 'minf', 'stbl', 'mvex', 'moof', 'traf', 'edts', 'dinf']);
+
+  function isProtectedMp4(buf) {
+    const u8 = new Uint8Array(buf);
+    const v = new DataView(buf);
+    const typeAt = p => String.fromCharCode(u8[p], u8[p + 1], u8[p + 2], u8[p + 3]);
+    if (u8.length < 8 || !['ftyp', 'styp', 'moov', 'moof'].includes(typeAt(4))) return false;
+    const walk = (start, end, depth) => {
+      let p = start;
+      while (p + 8 <= end) {
+        let size = v.getUint32(p);
+        const type = typeAt(p + 4);
+        let hdr = 8;
+        if (size === 1) {
+          if (p + 16 > end) return false;
+          size = Number(v.getBigUint64(p + 8));
+          hdr = 16;
+        } else if (size === 0) {
+          size = end - p;
+        }
+        if (size < hdr) return false;
+        const boxEnd = Math.min(p + size, end);
+        if (PROTECTION_BOXES.has(type)) return true;
+        if (depth < 12) {
+          if (CONTAINER_BOXES.has(type) && walk(p + hdr, boxEnd, depth + 1)) return true;
+          if (type === 'stsd' && walk(p + hdr + 8, boxEnd, depth + 1)) return true;
+        }
+        p += size;
+      }
+      return false;
+    };
+    return walk(0, u8.length, 0);
+  }
+
+  S.isProtectedMp4 = isProtectedMp4;
+
+  async function fetchBlob(url) {
     let r;
     try {
       r = await origFetch(url, { credentials: S.creds });
@@ -120,7 +158,10 @@
       r = await origFetch(url, { credentials: 'omit' });
     }
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    const blob = await r.blob();
+    return r.blob();
+  }
+
+  function saveBlob(blob, name) {
     const href = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = href;
@@ -135,14 +176,21 @@
   async function download(key) {
     const d = S.describe(key);
     if (!d || !d.files || !d.files.length) throw new Error('NOT_FOUND');
+    if (d.protected) throw new Error('PROTECTED');
+    const blobs = [];
+    for (const f of d.files) {
+      const blob = await fetchBlob(f.url);
+      if (f.ext === 'mp4' && isProtectedMp4(await blob.arrayBuffer())) throw new Error('PROTECTED');
+      blobs.push(blob);
+    }
     const names = [];
-    for (let i = 0; i < d.files.length; i++) {
+    for (let i = 0; i < blobs.length; i++) {
       const f = d.files[i];
       const suffix = d.files.length > 1 ? `_${i + 1}` : '';
       const name = `${S.safe(d.user)}_${S.stamp(d.time)}_${S.safe(d.id)}${suffix}.${f.ext}`;
-      await save(f.url, name);
+      saveBlob(blobs[i], name);
       names.push(name);
-      if (i < d.files.length - 1) await new Promise(r => setTimeout(r, 350));
+      if (i < blobs.length - 1) await new Promise(r => setTimeout(r, 350));
     }
     return names;
   }

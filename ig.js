@@ -12,12 +12,15 @@
 
   const fname = u => { try { return new URL(u, location.href).pathname.split('/').pop(); } catch (e) { return ''; } };
 
+  const isDrm = m => /ContentProtection/i.test(m.video_dash_manifest || '');
+
   function slimMedia(m) {
     return {
       pk: String(m.pk),
       media_type: m.media_type,
       video_versions: m.video_versions || null,
-      image_versions2: m.image_versions2 || null
+      image_versions2: m.image_versions2 || null,
+      protected: isDrm(m)
     };
   }
 
@@ -35,6 +38,7 @@
       caption: (m.caption && m.caption.text) || (prev && prev.caption) || '',
       video_versions: m.video_versions || (prev && prev.video_versions) || null,
       image_versions2: m.image_versions2 || (prev && prev.image_versions2) || null,
+      protected: isDrm(m) || (prev && prev.protected) || false,
       carousel: Array.isArray(m.carousel_media) && m.carousel_media.length ? m.carousel_media.map(slimMedia) : (prev && prev.carousel) || null
     };
     items.set(pk, it);
@@ -246,6 +250,7 @@
       caption: it.caption,
       time: it.taken_at,
       thumb: smallImage(it) || (it.carousel && smallImage(it.carousel[0])),
+      protected: it.protected || !!(it.carousel && it.carousel.some(c => c.protected)),
       files
     };
   };

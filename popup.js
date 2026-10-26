@@ -26,7 +26,7 @@ const I18N = {
     doneMany: n => `${n} dosya indirildi`,
     errPrefix: 'Hata: ',
     kinds: { story: 'Story', post: 'Post', reel: 'Reel', album: 'Albüm', video: 'Video', photo: 'Foto' },
-    errors: { NO_BRIDGE: 'sekmeyi yenile', NOT_FOUND: 'içerik bulunamadı', TIMEOUT: 'sayfa yanıt vermedi', UNKNOWN_CMD: 'bilinmeyen komut', NO_RESPONSE: 'yanıt yok' }
+    errors: { PROTECTED: 'korumalı içerik, indirilemez', NO_BRIDGE: 'sekmeyi yenile', NOT_FOUND: 'içerik bulunamadı', TIMEOUT: 'sayfa yanıt vermedi', UNKNOWN_CMD: 'bilinmeyen komut', NO_RESPONSE: 'yanıt yok' }
   },
   en: {
     recent: 'Recently viewed',
@@ -50,7 +50,7 @@ const I18N = {
     doneMany: n => `${n} files downloaded`,
     errPrefix: 'Error: ',
     kinds: { story: 'Story', post: 'Post', reel: 'Reel', album: 'Album', video: 'Video', photo: 'Photo' },
-    errors: { NO_BRIDGE: 'reload the tab', NOT_FOUND: 'content not found', TIMEOUT: 'page did not respond', UNKNOWN_CMD: 'unknown command', NO_RESPONSE: 'no response' }
+    errors: { PROTECTED: 'protected content, cannot be downloaded', NO_BRIDGE: 'reload the tab', NOT_FOUND: 'content not found', TIMEOUT: 'page did not respond', UNKNOWN_CMD: 'unknown command', NO_RESPONSE: 'no response' }
   }
 };
 
@@ -148,10 +148,10 @@ function card(item) {
   badge.className = 'badge';
   badge.textContent = T().kinds[item.kind] || item.kind;
   c.appendChild(badge);
-  if (item.count > 1) {
+  if (item.locked || item.count > 1) {
     const n = document.createElement('span');
     n.className = 'count';
-    n.textContent = '×' + item.count;
+    n.textContent = item.locked ? '🔒' : '×' + item.count;
     c.appendChild(n);
   }
   const u = document.createElement('span');

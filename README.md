@@ -16,6 +16,7 @@ A lightweight Chrome extension that lets you download the Instagram and TikTok c
 - **TikTok:** videos in the For You feed and on video pages (highest available quality, with audio), plus photo posts
 - **No extra network requests:** it only reads data the page has already loaded, so it doesn't hit Instagram or TikTok APIs on its own
 - **No server, no tracking, no accounts:** everything runs locally in your browser
+- **Respects content protection:** encrypted or DRM-protected files are never downloaded; such items show a 🔒 badge in the popup
 - English and Turkish interface
 
 ## Installation
@@ -52,11 +53,14 @@ Instagram and TikTok send the media URLs to the page as JSON when you browse. Th
 
 - **"Tab not ready":** reload the Instagram/TikTok tab.
 - **Nothing shows up:** open a piece of content first, then reopen the popup.
+- **🔒 badge or "protected content" error:** the file is encrypted or DRM-protected, so the extension won't download it. This is intentional.
 - **It stopped working:** Instagram and TikTok change their sites often. Please open an issue and include the browser console output.
 
 ## Disclaimer
 
-This project is **not affiliated with, endorsed by, or connected to Meta Platforms, Inc., Instagram, ByteDance or TikTok**. All trademarks belong to their respective owners.
+This is **not an official Meta or TikTok product**. It is not affiliated with, endorsed by, or connected to Meta Platforms, Inc., Instagram, ByteDance or TikTok. All trademarks belong to their respective owners.
+
+The extension does not bypass encryption, DRM or any access control. If a file turns out to be encrypted or DRM-protected, the download is refused.
 
 It is intended for **personal use** only, such as saving your own content or content you have permission to keep. Respect creators' rights and the platforms' terms of service. You are responsible for how you use this tool.
 
@@ -78,6 +82,7 @@ Instagram ve TikTok'ta **son görüntülediğin** içerikleri (hikâye, post, re
 - **TikTok:** For You akışındaki ve video sayfasındaki videolar (sesli, en yüksek kalite) ve fotoğraf postları
 - **Ekstra istek yok:** sadece sayfanın zaten yüklediği veriyi okur
 - **Sunucu, takip veya hesap yok:** her şey tarayıcında çalışır
+- **İçerik korumasına saygı:** şifreli ya da DRM korumalı dosyalar asla indirilmez; bu içerikler popup'ta 🔒 rozetiyle görünür
 - Türkçe ve İngilizce arayüz
 
 ### Kurulum
@@ -102,10 +107,13 @@ Dosyalar İndirilenler klasörüne `kullanıcı_tarih_id.uzantı` adıyla kayded
 
 - **"Sekme hazır değil":** Instagram/TikTok sekmesini yenile.
 - **Hiçbir şey görünmüyor:** önce bir içerik aç, sonra eklentiyi tekrar aç.
+- **🔒 rozeti veya "korumalı içerik" hatası:** dosya şifreli ya da DRM korumalı olduğu için eklenti onu indirmez. Bu bilinçli bir tercih.
 - **Çalışmayı bıraktı:** Instagram ve TikTok sitelerini sık değiştirir. Tarayıcı konsolundaki çıktıyla birlikte bir issue aç.
 
 ### Sorumluluk reddi
 
-Bu proje **Meta Platforms, Inc., Instagram, ByteDance veya TikTok ile bağlantılı değildir** ve bu şirketler tarafından desteklenmez. Tüm markalar sahiplerine aittir.
+Bu **resmi bir Meta veya TikTok ürünü değildir**. Meta Platforms, Inc., Instagram, ByteDance veya TikTok ile bağlantılı değildir ve bu şirketler tarafından desteklenmez. Tüm markalar sahiplerine aittir.
+
+Eklenti şifrelemeyi, DRM'i veya herhangi bir erişim kontrolünü aşmaz. Bir dosyanın şifreli ya da DRM korumalı olduğu anlaşılırsa indirme reddedilir.
 
 Yalnızca **kişisel kullanım** içindir: kendi içeriğini ya da saklama iznin olan içerikleri kaydetmek gibi. İçerik üreticilerinin haklarına ve platformların kullanım şartlarına saygı göster. Aracı nasıl kullandığından sen sorumlusun.
